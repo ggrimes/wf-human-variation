@@ -298,6 +298,10 @@ workflow {
             }
         }
         hap_check = haplocheck(bam_channel, ref_channel.collect(), mt_code)
+        | ifEmpty{
+            log.warn "Haplocheck failed to run. The workflow will continue, but will not output a contamination determination."
+            file("$projectDir/data/OPTIONAL_FILE")
+        }
     } else {
         // If haplocheck is not needed, use the predefined NV file.
         hap_check = Channel.fromPath("$projectDir/data/OPTIONAL_FILE")
@@ -847,7 +851,8 @@ workflow {
             bam_flag,  // Flagstats used to define chromosomes to analyse
             chromosome_codes,  // Accepted chromosome codes for the human genome
             modkit_probs,  // modkit probabilities for filtering
-            ref_channel
+            ref_channel,
+            run_haplotagging  // Define if the data are haplotagged.
         )
         mod_stats = results.modkit.flatten()
     } else {
